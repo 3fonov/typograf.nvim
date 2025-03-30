@@ -9,28 +9,14 @@
 ### lazy.nvim
 
 ```lua
-{
-  "3fonov/typograf.nvim",
-  config = function()
-    vim.keymap.set("v", "<leader>t", function()
-      require("typograf").typograf()
-    end, { desc = "Типографировать текст" })
-  end,
+return {
+	"3fonov/typograf.nvim",
+	config = function()
+		vim.keymap.set("v", "<leader>ty", ":<C-u>lua require('typograf').typograf()<CR>", { desc = "Типографировать текст" })
+	end
 }
 ```
 
-### packer.nvim
-
-```lua
-use {
-  "3fonov/typograf.nvim",
-  config = function()
-    vim.keymap.set("v", "<leader>t", function()
-      require("typograf").typograf()
-    end, { desc = "Типографировать текст" })
-  end,
-}
-```
 
 ## 📦 Зависимости
 
