@@ -40,7 +40,7 @@ local function build_soap_body(text)
     '<text>' .. text .. '</text>',
     '<entityType>1</entityType>',
     '<useBr>0</useBr>',
-    '<useP>1</useP>',
+    '<useP>0</useP>',
     '<maxNobr>3</maxNobr>',
     '</ProcessText>',
     '</soap:Body>',
@@ -48,6 +48,40 @@ local function build_soap_body(text)
   }, "\n")
 end
 
+function M.typograf_range(type)
+  local mode = type or vim.fn.visualmode()
+
+  -- получить границы оператора
+  local start_pos = vim.api.nvim_buf_get_mark(0, "[")
+  local end_pos = vim.api.nvim_buf_get_mark(0, "]")
+
+  local lines = vim.api.nvim_buf_get_lines(0, start_pos[1] - 1, end_pos[1], false)
+  if #lines == 0 then
+    print("Нет текста для типографа (motion)")
+    return
+  end
+
+  -- ограничим строки по колонке
+  if #lines == 1 then
+    lines[1] = string.sub(lines[1], start_pos[2] + 1, end_pos[2])
+  else
+    lines[1] = string.sub(lines[1], start_pos[2] + 1)
+    lines[#lines] = string.sub(lines[#lines], 1, end_pos[2])
+  end
+
+  local text = table.concat(lines, "\n")
+  local ok, result_or_err = pcall(M._send_soap_request, text)
+
+  if not ok then
+    print("Ошибка типографа: " .. result_or_err)
+    return
+  end
+
+  local result = result_or_err
+  local new_lines = vim.split(result, "\n")
+
+  vim.api.nvim_buf_set_lines(0, start_pos[1] - 1, end_pos[1], false, new_lines)
+end
 local function send_soap_request(text)
   local socket = require("socket")
   local host = "typograf.artlebedev.ru"
@@ -84,6 +118,8 @@ local function send_soap_request(text)
     return nil, "Не удалось извлечь результат"
   end
 end
+
+ M._send_soap_request = send_soap_request
 
 function M.typograf()
   local text, start_pos, end_pos = get_visual_selection()
